@@ -28,8 +28,15 @@ question = st.text_input("Your question:",
     placeholder="e.g. Which countries generate the most revenue?")
 
 if question:
-    with st.spinner("Checking if this is answerable..."):
-        if not check_intent(question):
+    try:
+        with st.spinner("Checking if this is answerable..."):
+            answerable = check_intent(question)
+    except RuntimeError:
+        st.info("The AI service is experiencing high demand right now. "
+                "Please try again in a few minutes.")
+        st.stop()
+    with st.spinner(""):
+        if not answerable:
             st.warning("This question can't be answered from the retail data. "
                        "Try asking about revenue, products, customers, or countries.")
             st.stop()
@@ -52,8 +59,11 @@ if question:
     result = pd.read_sql(sql, conn)
     conn.close()
 
-    with st.spinner("Writing insight..."):
-        insight = summarize_results(question, sql, result)
+    try:
+        with st.spinner("Writing insight..."):
+            insight = summarize_results(question, sql, result)
+    except RuntimeError:
+        insight = "Insight generation is temporarily unavailable (high demand) - but the data below is complete."
         insight = insight.replace("`", "")   # strip stray markdown
 
     st.success(insight)

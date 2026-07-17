@@ -19,24 +19,29 @@ Business rules:
 """
 
 def call_llm(prompt):
-    """All API calls go through here. Retries on rate limits AND server errors."""
-    for attempt in range(4):
-        try:
-            response = client.models.generate_content(
-                model="gemini-2.5-flash", contents=prompt)
-            return response.text
-        except errors.ClientError as e:
-            if e.code == 429:
-                wait = 30 * (attempt + 1)
-                print(f"   (rate limited - waiting {wait}s...)")
-                time.sleep(wait)
-            else:
-                raise
-        except errors.ServerError:
-            wait = 10 * (attempt + 1)
-            print(f"   (server busy - waiting {wait}s...)")
-            time.sleep(wait)
-    raise RuntimeError("API unavailable after multiple retries - try again in a few minutes")
+    """All API calls go through here.
+    Tries models in order - falls back when one is rate limited."""
+    models = ["gemini-2.5-flash", "gemini-2.5-flash-lite"]
+    last_error = None
+    for model in models:
+        for attempt in range(2):
+            try:
+                response = client.models.generate_content(
+                    model=model, contents=prompt)
+                return response.text
+            except errors.ClientError as e:
+                if e.code == 429:
+                    last_error = f"{model} rate limited"
+                    print(f"   ({last_error} - attempt {attempt+1})")
+                    time.sleep(5)
+                else:
+                    raise
+            except errors.ServerError:
+                last_error = f"{model} unavailable"
+                print(f"   ({last_error} - attempt {attempt+1})")
+                time.sleep(5)
+        # this model failed twice - try the next one
+    raise RuntimeError(f"All models exhausted ({last_error})")
 
 def check_intent(question):
     prompt = f"""Given this database schema:

@@ -2,7 +2,7 @@
 
 **Ask business questions in plain English — get SQL, charts, and insights back.**
 
-🔗 **[Live Demo](https://YOUR-APP-URL.streamlit.app)** · Built with Python, SQLite, Gemini API, Streamlit
+🔗 **[Live Demo](https://insightpilot-riya.streamlit.app)** · Built with Python, SQLite, Gemini API, Streamlit
 
 InsightPilot is an AI-powered self-serve analytics tool. A user types a question like
 *"What was the monthly revenue trend in 2010?"* and a multi-step LLM workflow generates
@@ -10,6 +10,15 @@ the SQL, validates it, corrects its own errors, runs it against 824K real retail
 transactions, and returns a chart plus a plain-English insight.
 
 ## Architecture
+
+    User question
+       -> 1. Intent classification    (answerable from schema? read-only?)
+       -> 2. SQL generation           (schema-aware prompt with business rules)
+       -> 3. Validation               (SELECT-only, single statement, EXPLAIN compile check)
+       -> 4. Self-correction loop     (validation errors fed back to the LLM, up to 2 retries)
+       -> 5. Execution                (SQLite, 824K rows)
+       -> 6. Insight summarization    (analyst-persona LLM call, plain-English takeaway)
+
 Plus production hardening: multi-model fallback (flash → flash-lite) for quota
 resilience, exponential backoff on rate limits, and graceful degradation in the UI.
 

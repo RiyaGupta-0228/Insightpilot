@@ -54,9 +54,3 @@ streamlit run app.py
 The repo includes `retail.db` ready to use. To rebuild it from source data,
 download the CSV from Kaggle and run `python3 load_data.py`.
 
-## Roadmap
-
-- [ ] Accuracy benchmark: 50 questions with known answers, measured correctness
-- [ ] Semantic metrics layer: YAML-defined business metrics injected into prompts
-- [ ] Cost & latency tracking per query
-- [ ] Scheduled anomaly detection with LLM-written executive summaries
